@@ -6,59 +6,54 @@
     <section>
       <nav>Name/Info</nav>
       <div>
-        <con-profile-icon-selector formControlName="icon"/>
-        <input formControlName="firstName" [class.error]="firstName.invalid && firstName.touched"
-         placeholder="First Name" />
-        <em *ngIf="firstName.errors?.['required'] && firstName.touched">Please enter a First Name </em>
-        <em *ngIf="firstName.errors?.['minlength'] && firstName.touched">First Name must be at leaste 3 characters
-
-        </em>
-        <input formControlName="lastName" laceholder="Last Name" />
+        <con-profile-icon-selector formControlName="icon"></con-profile-icon-selector>
+        <input formControlName="firstName" [class.error]="firstName.invalid && firstName.touched" placeholder="First Name" />
+        <em *ngIf="firstName.errors?.['required'] && firstName.touched">Please enter a First Name</em>
+        <em *ngIf="firstName.errors?.['minlength'] && firstName.touched">First Name must be at least 3 characters</em>
+        <input formControlName="lastName" placeholder="Last Name" />
         <input formControlName="dateOfBirth" type="date" placeholder="Date of Birth" />
-          <div>
-            <span>Favorites Ranking</span>
-            <input formControlName="favoritesRanking" type="range" min="0" max="5" placeholder="Favorites Ranking" />
-            <span>{{contactForm.controls.favoritesRanking.value}}</span>
-          </div>
         <div>
-          <input type="checkbox" formControlName="personal" />Pesornal
+          <span>Favorites Ranking</span>
+          <input formControlName="favoritesRanking" type="range" min="0" max="5" placeholder="Favorites Ranking" />
+          <span>{{contactForm.controls.favoritesRanking.value}}</span>
+        </div>
+        <div>
+          <input type="checkbox" formControlName="personal" />Personal
         </div>
       </div>
     </section>
     <section>
       <nav>Phones</nav>
-      <div formArraypName="phone"> 
-        <div *ngFor="let phone of contactForm.controls.phones.controls; let i=index" [formGroupName]="i" 
-        class="flex-column">
-        <div class="flex-group">
-          <input formControlName="phoneNumber"placeholder="Phone" />
-          <img src="/assets/plus-grey-blue.png" class="add" (click)="addPhone()"/>
+      <div formArrayName="phones"> 
+        <div *ngFor="let phone of contactForm.controls.phones.controls; let i=index" [formGroupName]="i" class="flex-column">
+          <div class="flex-group">
+            <input formControlName="phoneNumber" placeholder="Phone" />
+            <img src="/assets/plus-grey-blue.png" class="add" (click)="addPhone()"/>
+          </div>
+          <em *ngIf="phone.controls.phoneNumber.invalid">Invalid phone number</em>
+          <div class="radio">
+            <span *ngFor="let phoneType of phoneTypes">
+              <input type="radio" formControlName="phoneType" [value]="phoneType.value"> {{phoneType.title}}
+            </span>
+          </div>
+          <span><input type="checkbox" formControlName="preferred"/>Preferred</span>
         </div>
-        <em *ngIf="phone.controls.phoneNumeber.invalid">Preferre</em>
-        <div class="radio">
-          <span *ngFor="let phoneType of phoneTypes">
-            <input type="radio" formControlName="phoneType" [value]="phoneType.value"> {{phoneType.Title}}
-          </span>
-        </div>
-        <span><input type="checkbox" formControlName/>Preferred</span>
-      </div>
       </div>
     </section>
     <section>
       <nav>Address</nav>
       <div>
-        <div formGroupName="address" class="address" 
-        [class.error]="contactForm.controls.address.invalid && contactForm.controls.address.dirty">
-          <div  class="flex-group">
+        <div formGroupName="address" class="address" [class.error]="contactForm.controls.address.invalid && contactForm.controls.address.dirty">
+          <div class="flex-group">
             <input placeholder="Address" formControlName="streetAddress"/>
             <img src="/assets/plus-grey-blue.png" class="add" />
           </div>
-          <input placeholder="City"  formControlName="city"/>
-          <input placeholder="State/Region"  formControlName="state"/>
-          <input placeholder="Zip/Postal Code"  formControlName="postalCode"/>
-          <select formControlName="addressTypeValue">
-            <option *ngFor="let addressType of addressTypes" value="home">
-              {{addressType.Title}}
+          <input placeholder="City" formControlName="city"/>
+          <input placeholder="State/Region" formControlName="state"/>
+          <input placeholder="Zip/Postal Code" formControlName="postalCode"/>
+          <select formControlName="addressType">
+            <option *ngFor="let addressType of addressTypes" [value]="addressType.value">
+              {{addressType.title}}
             </option>
           </select>
         </div>
@@ -68,15 +63,15 @@
     <section>
       <nav>Notes</nav>
       <div>
-        <textarea placeholder="Notes" row="5" [class.error]="notes.invalid" formControlName="notes"></textarea>
+        <textarea placeholder="Notes" rows="5" [class.error]="notes.invalid" formControlName="notes"></textarea>
         <em *ngIf="notes.errors?.['restrictedWords']">
           Restricted words found: {{notes.errors?.['restrictedWords']}}
         </em>
       </div>
     </section>
     <div class="buttons">
-      <button class="secondary">Cancel</button>
-      <button type="submit" class="primary" (click)="saveContact()">Save</button>
+      <button type="button" class="secondary" (click)="cancel()">Cancel</button>
+      <button type="submit" class="primary">Save</button>
     </div>
   </form>
 </div>

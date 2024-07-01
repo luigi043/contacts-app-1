@@ -1,18 +1,22 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormControl, Validators } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ContactsService } from '../contacts/contacts.service';
 import { phoneTypeValues, addressTypeValues } from '../contacts/contact.model';
 import { restrictedWords } from '../Validators/restricted-words.validator';
-import { concat, distinctUntilChanged } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
   templateUrl: './edit-contact.component.html',
   styleUrls: ['./edit-contact.component.css']
 })
 export class EditContactComponent implements OnInit {
-  phoneTypes =phoneTypeValues;
-  addressTypes =addressTypeValues;
+cancel() {
+throw new Error('Method not implemented.');
+}
+  phoneTypes = phoneTypeValues;
+  addressTypes = addressTypeValues;
+
   contactForm = this.fb.nonNullable.group({
     id: '',
     icon: '',
@@ -29,7 +33,7 @@ export class EditContactComponent implements OnInit {
       postalCode: ['', Validators.required],
       addressType: '',
     }),
-    notes:['', restrictedWords(['foo','bar'])],
+    notes: ['', restrictedWords(['foo', 'bar'])],
   });
 
   constructor(
@@ -41,53 +45,85 @@ export class EditContactComponent implements OnInit {
 
   ngOnInit() {
     const contactId = this.route.snapshot.params['id'];
-    if (!contactId) return;
+    if (!contactId) {
+      this.subscribeToAddressChange();
+      return;
+    }
 
     this.contactsService.getContact(contactId).subscribe((contact) => {
       if (!contact) return;
-      for(let i =1; i < concat.phone.length; i++){
+      for (let i = 1; i < contact.phones.length; i++) {
         this.addPhone();
       }
 
-      this.contactForm.setValue(contact);
+      this.contactForm.setValue(contact as any); // Type assertion to ensure compatibility
+      this.subscribeToAddressChange();
     });
   }
-  stringifyCompare(a:any, b :any ){
+
+  subscribeToAddressChange() {
+    const addressGroup = this.contactForm.controls.address;
+    addressGroup.valueChanges
+      .pipe(distinctUntilChanged(this.stringifyCompare))
+      .subscribe(() => {
+        for (const controlName in addressGroup.controls) {
+          addressGroup.get(controlName)?.removeValidators([Validators.required]);
+          addressGroup.get(controlName)?.updateValueAndValidity();
+        }
+      });
+
+    addressGroup.valueChanges
+      .pipe(debounceTime(2000), distinctUntilChanged(this.stringifyCompare))
+      .subscribe(() => {
+        for (const controlName in addressGroup.controls) {
+          addressGroup.get(controlName)?.addValidators([Validators.required]);
+          addressGroup.get(controlName)?.updateValueAndValidity();
+        }
+      });
+  }
+
+  stringifyCompare(a: any, b: any) {
     return JSON.stringify(a) === JSON.stringify(b);
   }
+
   createPhoneGroup() {
     const phoneGroup = this.fb.nonNullable.group({
-     phoneType:'',
-     phoneNumeber:'',
-     preferred: false,
-  });
-  phoneGroup.controls.preferred.valueChanges
-  .pipe(distinctUntilChanged((a,b ) => JSON.stringify(a) === JSON.stringify(b)))
-  .subscribe(value =>{
-    if (value)
-      phoneGroup.controls.phoneNumeber.addAsyncValidators({Validators.required]);
-    else
-    phoneGroup.controls.phoneNumeber.removeValidators({Validators.required]);
-  phoneGroup.controls.phoneNumeber.updateValueAndValidity();
+      phoneType: '',
+      phoneNumber: '',
+      preferred: false,
+    });
+    phoneGroup.controls.preferred.valueChanges
+      .pipe(distinctUntilChanged(this.stringifyCompare))
+      .subscribe((value) => {
+        if (value) {
+          phoneGroup.controls.phoneNumber.addValidators([Validators.required]);
+        } else {
+          phoneGroup.controls.phoneNumber.removeValidators([Validators.required]);
+        }
+        phoneGroup.controls.phoneNumber.updateValueAndValidity();
+      });
 
-  });
+    return phoneGroup;
+  }
 
-  return phoneGroup;
-}
-addPhone(){
-  this.contactForm.controls.phones.push(this.createPhoneGroup());
-}
-    get firstName(){
+  addPhone() {
+    this.contactForm.controls.phones.push(this.createPhoneGroup());
+  }
+
+  get firstName() {
     return this.contactForm.controls.firstName;
   }
-  get notes(){
+
+  get notes() {
     return this.contactForm.controls.notes;
   }
+
   saveContact() {
     console.log(this.contactForm.value.favoritesRanking, typeof this.contactForm.value.favoritesRanking);
     this.contactsService.saveContact(this.contactForm.getRawValue()).subscribe({
-      next: () => this.router.navigate(['/contacts'])
+      next: () => this.router.navigate(['/contacts']),
     });
   }
 }
+
 
