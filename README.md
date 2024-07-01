@@ -1,3 +1,7 @@
+![image](https://github.com/luigi043/contacts-app-1/assets/73402404/a0d4c561-02ae-4dc5-862f-1b991a19b8cf)
+
+
+
 # ContactsApp
 
 This is the Demo app for Pluralsight's Angular Reactive Forms course.
